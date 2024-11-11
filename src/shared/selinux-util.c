@@ -747,3 +747,43 @@ skipped:
 #endif
         return RET_NERRNO(bind(fd, addr, addrlen));
 }
+
+int mac_selinux_set_current_context(const char *unit_label, const char *unit_name) {
+        /* Set the current process context based on policy statements (dyntransition) */
+#if HAVE_SELINUX
+        _cleanup_freecon_ char *scon = NULL;
+        _cleanup_freecon_ char *tcon = NULL;
+        security_class_t tclass;
+
+        if (selinux_init(/* force= */ false) <= 0)
+                goto skipped;
+
+        if (_unlikely_(getcon_raw(&scon) < 0)) {
+                log_trace("Failed to get current SELinux context: %s": strerror(errno));
+                goto skipped;
+        }
+
+        tclass = string_to_security_class("process");
+        if (_unlikely_(tclass == 0)) {
+                log_trace("SELinux policy does not define a process class.");
+                goto skipped;
+        }
+
+        if (security_compute_create_name_raw(scon, unit_label, tclass, unit_name, &tcon) < 0) {
+                log_trace("security_compute_create_name_raw() failed: %s", strerror(errno));
+                goto skipped;
+        }
+
+        if (streq(scon, tcon)) {
+                /* skip setcon() since the context didn't change, otherwise this will
+                 * break on systems where the policy doesn't support this or want this.
+                 */
+                log_trace("No SELinux dyntransition requested.");
+                goto skipped;
+        }
+
+        return setcon_raw(tcon);
+skipped:
+#endif
+        return 0;
+}

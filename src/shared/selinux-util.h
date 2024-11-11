@@ -50,3 +50,5 @@ int mac_selinux_create_socket_prepare(const char *label);
 void mac_selinux_create_socket_clear(void);
 
 int mac_selinux_bind(int fd, const struct sockaddr *addr, socklen_t addrlen);
+
+int mac_selinux_set_current_context(const char *unit_label, const char *unit_name);

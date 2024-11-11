@@ -4829,6 +4829,11 @@ int exec_invoke(
 
         needs_mount_namespace = exec_needs_mount_namespace(context, params, runtime);
 
+        r = mac_selinux_set_current_context(params->unit_selinux_context, params->unit_id);
+        if (r < 0) {
+                return log_exec_error_errno(context, params, r, "Failed to set current process SELinux context: %m");
+        }
+
         for (ExecDirectoryType dt = 0; dt < _EXEC_DIRECTORY_TYPE_MAX; dt++) {
                 r = setup_exec_directory(context, params, uid, gid, dt, needs_mount_namespace, exit_status);
                 if (r < 0)
