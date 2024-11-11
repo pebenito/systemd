@@ -1433,6 +1433,10 @@ static int exec_parameters_serialize(const ExecParameters *p, const ExecContext 
         if (r < 0)
                 return r;
 
+        r = serialize_item(f, "exec-parameters-unit-selinux-context", p->unit_selinux_context);
+        if (r < 0)
+                return r;
+
         r = serialize_item(f, "exec-parameters-invocation-id-string", p->invocation_id_string);
         if (r < 0)
                 return r;
@@ -1710,6 +1714,10 @@ static int exec_parameters_deserialize(ExecParameters *p, FILE *f, FDSet *fds) {
                                 return r;
                 } else if ((val = startswith(l, "exec-parameters-unit-id="))) {
                         r = free_and_strdup(&p->unit_id, val);
+                        if (r < 0)
+                                return r;
+                } else if ((val = startswith(l, "exec-parameters-unit-selinux-context="))) {
+                        r = free_and_strdup(&p->unit_selinux_context, val);
                         if (r < 0)
                                 return r;
                 } else if ((val = startswith(l, "exec-parameters-invocation-id-string="))) {

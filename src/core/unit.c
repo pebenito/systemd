@@ -5414,6 +5414,11 @@ int unit_set_exec_params(Unit *u, ExecParameters *p) {
         p->unit_id = strdup(u->id);
         if (!p->unit_id)
                 return -ENOMEM;
+        if (u->access_selinux_context) {
+                p->unit_selinux_context = strdup(u->access_selinux_context);
+                if (!p->unit_selinux_context)
+                        return -ENOMEM;
+        }
 
         p->debug_invocation = u->debug_invocation;
 
